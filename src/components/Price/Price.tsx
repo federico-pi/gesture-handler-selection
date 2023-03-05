@@ -19,7 +19,7 @@ export function Price({ currency }: CurrencyProps) {
   if (!currency) {
     return null;
   }
-  console.log(currency);
+
   return (
     <Text style={styles.text}>
       {currencySymbolMap[currency.symbol]}
