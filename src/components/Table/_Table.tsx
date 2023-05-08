@@ -1,20 +1,27 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useCallback } from 'react';
 import {
   View,
-  LayoutChangeEvent,
-  FlatList,
   StyleSheet,
   Dimensions,
-  ListRenderItemInfo,
-  Text,
+  FlatList,
+  Alert,
+  LayoutChangeEvent,
 } from 'react-native';
 
 import { isNumber, memoize } from 'lodash';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
+/** Demo */
+
+/** Availability calendar example */
+
+/** Excalidraw explanation */
+
+/** Memoize everything */
+
 interface CellSize {
-  height: number;
   width: number;
+  height: number;
 }
 
 interface Coordinates {
@@ -22,30 +29,29 @@ interface Coordinates {
   y: number;
 }
 
-interface Selection {
-  start: number;
-  end: number;
-}
-
+/** 1 */
 const TABLE_ROWS = 4;
 const TABLE_COLUMNS = 3;
 
 export function Table() {
+  /** 5 */
   const cellSize = useRef<CellSize>();
 
+  /** 7 */
   const [startIndex, setStartIndex] = useState<number>();
   const [endIndex, setEndIndex] = useState<number>();
-  const [selection, setSelection] = useState<Selection>();
 
+  /** 9 */
   const resetState = () => {
-    setEndIndex(undefined);
     setStartIndex(undefined);
+    setEndIndex(undefined);
   };
 
+  /** 8 */
   const isWithinRange = useCallback(
     (index: number) => {
       if (!isNumber(startIndex) || !isNumber(endIndex)) {
-        return false;
+        return;
       }
 
       return (
@@ -56,6 +62,7 @@ export function Table() {
     [startIndex, endIndex]
   );
 
+  /** 6 */
   const handleDragSelection = useCallback(({ x, y }: Coordinates) => {
     if (!cellSize.current) {
       return;
@@ -70,31 +77,31 @@ export function Table() {
     return targetRow * TABLE_COLUMNS + targetColumn;
   }, []);
 
+  /** 4 onChange logs */
   const gesture = useMemo(
     () =>
       Gesture.Pan()
         .onBegin(({ x, y }) => {
-          setSelection(undefined);
-
           const index = handleDragSelection({ x, y });
 
           setStartIndex(index);
           setEndIndex(index);
         })
-        .onChange(({ x, y }: Coordinates) =>
-          setEndIndex(handleDragSelection({ x, y }))
-        )
+        .onChange(({ x, y }) => setEndIndex(handleDragSelection({ x, y })))
         .onFinalize(() => {
-          if (isNumber(startIndex) && isNumber(endIndex)) {
-            setSelection({ start: startIndex, end: endIndex });
-            resetState();
+          if (!isNumber(startIndex) || !isNumber(endIndex)) {
+            return;
           }
+
+          Alert.alert(`Selected from ${startIndex} to ${endIndex}`);
+          resetState();
         })
         .shouldCancelWhenOutside(true)
         .onTouchesCancelled(resetState),
     [startIndex, endIndex, handleDragSelection]
   );
 
+  /** 5 */
   const onLayout = useCallback(
     (event: LayoutChangeEvent) =>
       event.target.measure(
@@ -106,33 +113,29 @@ export function Table() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.tooltipWrapper}>
-        {selection && (
-          <Text style={styles.tooltip}>
-            {`Selected cells from index ${selection.start} to ${selection.end} 🎉`}
-          </Text>
-        )}
-        {!selection && isNumber(startIndex) && (
-          <Text style={styles.tooltip}>{`Selecting...`}</Text>
-        )}
-      </View>
+      {/** 3 */}
       <GestureDetector gesture={gesture}>
+        {/** 2 */}
         <FlatList
           style={styles.table}
           data={new Array(TABLE_COLUMNS * TABLE_ROWS).fill(1)}
           keyExtractor={(_, i) => i.toString()}
           scrollEnabled={false}
           numColumns={TABLE_COLUMNS}
-          renderItem={memoize(({ index }: ListRenderItemInfo<1[]>) => {
+          renderItem={memoize(({ index }) => {
+            /** 8 */
             const isSelected = isWithinRange(index);
 
             return (
               <View
-                onLayout={onLayout}
+                onLayout={
+                  /** 5 */
+                  onLayout
+                }
                 style={[
                   styles.cell,
                   {
-                    backgroundColor: isSelected ? '#FFFFFF' : '#FFFFFF05',
+                    backgroundColor: isSelected ? '#fff' : '#FFFFFF05',
                     shadowRadius: isSelected ? 2 : 5,
                   },
                 ]}
@@ -152,22 +155,13 @@ const CELL_WIDTH =
 const CELL_HEIGHT =
   ((SCREEN_HEIGHT - TABLE_ROWS * (CELL_MARGIN * 2)) / TABLE_ROWS) * 0.33;
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 16,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tooltipWrapper: {
-    height: 20,
-    marginBottom: 32,
-  },
-  tooltip: {
-    color: 'white',
-    fontSize: 20,
-    lineHeight: 20,
   },
   table: {
     flexGrow: 0,
